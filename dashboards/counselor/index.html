@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Counselor Dashboard</title>
+    <link rel="stylesheet" href="css/counselor-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar collapsible-sidebar">
+            <div class="sidebar-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">
+                <div style="display:flex;align-items:center;gap:0.7rem;">
+                    <img id="sidebarUserAvatar" src="https://ui-avatars.com/api/?name=Counselor&background=5b7cfa&color=fff&size=128" alt="Avatar" style="width:48px;height:48px;border-radius:50%;border:2.5px solid var(--primary-color);background:#fff;">
+                    <span id="sidebarUserName" style="font-weight:600;font-size:1.1rem;">Counselor</span>
+                </div>
+                <button id="sidebarCollapseBtn" style="background:var(--primary-color);border:none;border-radius:8px;padding:0.3rem 0.6rem;cursor:pointer;transition:background 0.2s;">
+                    <i id="sidebarCollapseIcon" class="fas fa-angle-double-left" style="color:#fff;font-size:1.2rem;"></i>
+                </button>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#" id="nav-dashboard" class="sidebar-link" data-section="dashboard"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a></li>
+                <li><a href="#" id="nav-appointments" class="sidebar-link" data-section="appointments"><i class="fas fa-calendar-check"></i> <span>Appointments</span></a></li>
+                <li><a href="#" id="nav-announcements" class="sidebar-link" data-section="announcements"><i class="fas fa-bullhorn"></i> <span>Announcements</span></a></li>
+                <li><a href="#" id="nav-resources" class="sidebar-link" data-section="resources"><i class="fas fa-book"></i> <span>Resources</span></a></li>
+                <li><a href="#" id="nav-students" class="sidebar-link" data-section="students"><i class="fas fa-users"></i> <span>Students</span></a></li>
+                <li><a href="#" id="nav-profile" class="sidebar-link" data-section="profile"><i class="fas fa-user"></i> <span>Profile</span></a></li>
+                <li class="sidebar-logout"><a href="#" id="logout-btn" class="sidebar-link"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
+            </ul>
+        </div>
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar" style="display:flex;align-items:center;justify-content:space-between;gap:2rem;">
+                <div class="dashboard-title" style="display:flex;align-items:center;gap:1rem;">
+                    <i class="fas fa-user-tie" style="font-size:1.7rem;color:var(--primary-color);"></i>
+                    <span style="font-size:1.35rem;font-weight:700;letter-spacing:0.5px;">Counselor Dashboard</span>
+                </div>
+                <div class="topbar-accent" style="height:4px;width:120px;background:linear-gradient(90deg,#5b7cfa 0%,#4a6ae9 100%);border-radius:2px;"></div>
+                <span id="notificationsBell" style="position:relative;cursor:pointer;">
+                    <i class="fas fa-bell"></i>
+                    <span id="notificationsBadge" style="position:absolute;top:-6px;right:-8px;background:#e74c3c;color:#fff;font-size:0.8rem;padding:2px 6px;border-radius:10px;display:none;">0</span>
+                </span>
+            </div>
+            <!-- Dashboard Section -->
+            <section id="section-dashboard" class="section active">
+                <div class="section-header">
+                    <span class="section-icon" aria-hidden="true"><i class="fas fa-user-tie" style="color:#5b7cfa;"></i></span>
+                    <h2>Dashboard Overview</h2>
+                </div>
+                <!-- Counselor Dashboard Widgets Row -->
+                <div class="dashboard-widgets-row" style="display:flex;flex-wrap:wrap;gap:2rem;margin-bottom:2.5rem;align-items:stretch;">
+                    <!-- Wellness Tips Widget -->
+                    <div class="dashboard-widget wellness-widget" style="flex:1;min-width:220px;">
+                        <div class="widget-header"><i class="fas fa-heartbeat"></i> Wellness Tip</div>
+                        <div class="widget-body" id="wellnessTipWidget">Take a short break and stretch!</div>
+                    </div>
+                    <!-- Motivational Quote Widget -->
+                    <div class="dashboard-widget quote-widget" style="flex:1;min-width:220px;">
+                        <div class="widget-header"><i class="fas fa-quote-left"></i> Motivational Quote</div>
+                        <div class="widget-body" id="motivationalQuoteWidget">"The best way to take care of others is to take care of yourself."</div>
+                    </div>
+                    <!-- Quick Actions Widget -->
+                    <div class="dashboard-widget quick-actions-widget" style="flex:1;min-width:220px;">
+                        <div class="widget-header"><i class="fas fa-bolt"></i> Quick Actions</div>
+                        <div class="widget-body" style="display:flex;flex-direction:column;gap:0.7rem;">
+                            <button class="primary-btn" id="quickAddAnnouncement"><i class="fas fa-bullhorn"></i> Add Announcement</button>
+                            <button class="secondary-btn" id="quickUploadResource"><i class="fas fa-upload"></i> Upload Resource</button>
+                            <button class="secondary-btn" id="quickViewCalendar"><i class="fas fa-calendar-alt"></i> View Calendar</button>
+                            <button class="secondary-btn" id="quickMessageStudents"><i class="fas fa-envelope"></i> Message Students</button>
+                        </div>
+                    </div>
+                    <!-- Counselor Notes Widget -->
+                    <div class="dashboard-widget notes-widget" style="flex:1;min-width:220px;">
+                        <div class="widget-header"><i class="fas fa-sticky-note"></i> My Notes</div>
+                        <div class="widget-body">
+                            <textarea id="counselorNotes" rows="5" placeholder="Write your notes or reminders here..." style="width:100%;border-radius:8px;padding:0.7rem;background:var(--background-color);color:var(--text-color);border:1px solid var(--border-color);"></textarea>
+                            <button class="primary-btn" id="saveNotesBtn" style="margin-top:0.7rem;width:100%;">Save Notes</button>
+                            <div id="notesStatus" style="font-size:0.97em;color:var(--muted-text);margin-top:0.3rem;"></div>
+                        </div>
+                    </div>
+                    <!-- Upcoming Birthdays Widget -->
+                    <div class="dashboard-widget birthdays-widget" style="flex:1;min-width:220px;">
+                        <div class="widget-header"><i class="fas fa-birthday-cake"></i> Upcoming Birthdays</div>
+                        <div class="widget-body" id="upcomingBirthdaysWidget">Loading...</div>
+                    </div>
+                    <!-- Student Engagement Widget (visual) -->
+                    <div class="dashboard-widget engagement-widget" style="flex:1;min-width:220px;">
+                        <div class="widget-header"><i class="fas fa-users"></i> Student Engagement</div>
+                        <div class="widget-body" style="display:flex;flex-direction:column;align-items:center;">
+                            <div id="studentEngagementStat" style="font-size:2.2rem;color:#5b7cfa;font-weight:bold;text-align:center;">0</div>
+                            <div style="text-align:center;font-size:0.95rem;color:#888;">Unique students this month</div>
+                        </div>
+                    </div>
+                </div>
+                <hr class="section-divider">
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <i class="fas fa-calendar-check"></i>
+                        <div class="stat-info">
+                            <h4>Upcoming Appointments</h4>
+                            <p id="stat-upcoming">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <div class="stat-info">
+                            <h4>Active Students</h4>
+                            <p id="stat-students">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-book"></i>
+                        <div class="stat-info">
+                            <h4>Resources</h4>
+                            <p id="stat-resources">0</p>
+                        </div>
+                    </div>
+                </div>
+                <hr class="section-divider">
+                <div class="dashboard-widget">
+                    <div class="widget-header"><i class="fas fa-bullhorn"></i> Announcements</div>
+                    <div class="widget-body" id="dashboard-announcements">
+                        <!-- Announcements content here -->
+                    </div>
+                </div>
+                <div class="dashboard-widget">
+                    <div class="widget-header"><i class="fas fa-calendar-alt"></i> Upcoming Appointments</div>
+                    <div class="widget-body" id="dashboard-appointments">
+                        <!-- Appointments content here -->
+                    </div>
+                </div>
+                <div class="dashboard-widget">
+                    <div class="widget-header"><i class="fas fa-book"></i> Recent Resources</div>
+                    <div class="widget-body" id="dashboard-resources">
+                        <!-- Resources content here -->
+                    </div>
+                </div>
+                <!-- Analytics Overview -->
+                <div id="dashboard-analytics" style="margin-top:2.5rem;">
+                    <div style="display:flex;flex-wrap:wrap;gap:2rem;align-items:flex-start;">
+                        <div style="flex:2;min-width:320px;">
+                            <h3>Appointment Trends</h3>
+                            <canvas id="appointmentsTrendsChart" height="120"></canvas>
+                        </div>
+                        <div style="flex:1;min-width:220px;">
+                            <h3>Status Breakdown</h3>
+                            <canvas id="appointmentsStatusChart" height="180"></canvas>
+                        </div>
+                        <div style="flex:1;min-width:180px;">
+                            <h3>Student Engagement</h3>
+                            <div id="studentEngagementStat" style="font-size:2.2rem;color:#5b7cfa;font-weight:bold;text-align:center;">0</div>
+                            <div style="text-align:center;font-size:0.95rem;color:#888;">Unique students this month</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:2.5rem;">
+                        <h3>Recent Activity</h3>
+                        <div id="recentActivityFeed" class="no-data-message">Loading activity...</div>
+                    </div>
+                </div>
+            </section>
+            <!-- Appointments Section -->
+            <section id="section-appointments" class="section"><h1>Appointments</h1>
+                <!-- New Appointment Button -->
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;">
+                    <div style="font-size:1.15rem;font-weight:600;"><i class="fas fa-calendar-alt" style="color:#5b7cfa;"></i> Manage Appointments</div>
+                    <button class="primary-btn" id="newAppointmentBtn"><i class="fas fa-plus"></i> New Appointment</button>
+                </div>
+                <div class="appointment-tabs" style="display:flex;gap:1.5rem;margin-bottom:1.5rem;">
+                    <div class="appointment-tab active" data-tab="list">List</div>
+                    <div class="appointment-tab" data-tab="calendar">Calendar</div>
+                </div>
+                <!-- Search/Filter Bar -->
+                <div id="appointmentsSearchBar" style="display:flex;gap:1rem;align-items:center;margin-bottom:1.2rem;flex-wrap:wrap;">
+                    <input type="text" id="appointmentsSearchInput" placeholder="Search by student name or email..." style="flex:1;min-width:180px;padding:0.5rem;border-radius:8px;border:1px solid var(--border-color);">
+                    <select id="appointmentsStatusFilter" style="padding:0.5rem;border-radius:8px;border:1px solid var(--border-color);">
+                        <option value="all">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div id="appointmentsTabContents">
+                    <div class="appointment-tab-content active" id="appointmentsListTab">
+                        <div id="appointmentsContainer"></div>
+                    </div>
+                    <div class="appointment-tab-content" id="appointmentsCalendarTab" style="display:none;">
+                        <div id="counselor-appointments-calendar"></div>
+                        <!-- Calendar Legend -->
+                        <div id="calendar-legend" style="margin-top:1rem;display:flex;gap:1.5rem;align-items:center;">
+                            <span><span style="display:inline-block;width:16px;height:16px;background:#27ae60;border-radius:3px;margin-right:6px;"></span>Approved</span>
+                            <span><span style="display:inline-block;width:16px;height:16px;background:#f39c12;border-radius:3px;margin-right:6px;"></span>Pending</span>
+                            <span><span style="display:inline-block;width:16px;height:16px;background:#e74c3c;border-radius:3px;margin-right:6px;"></span>Rejected</span>
+                            <span><span style="display:inline-block;width:16px;height:16px;background:#888;border-radius:3px;margin-right:6px;"></span>Cancelled</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- New Appointment Modal -->
+                <div class="modal" id="newAppointmentModal">
+                    <div class="modal-content" style="max-width:420px;min-width:320px;">
+                        <button class="close" id="closeNewAppointmentModal" type="button" aria-label="Close">&times;</button>
+                        <h2 style="margin-top:0;margin-bottom:1.2rem;font-size:1.25rem;font-weight:700;letter-spacing:0.5px;">New Appointment</h2>
+                        <form id="newAppointmentForm">
+                            <div class="form-group">
+                                <label for="newApptStudent">Student</label>
+                                <select id="newApptStudent" required style="width:100%;padding:0.5rem;border-radius:8px;border:1px solid var(--border-color);">
+                                    <option value="" disabled selected>Select student</option>
+                                    <!-- Students will be loaded here -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="newApptDate">Date</label>
+                                <input type="date" id="newApptDate" required style="width:100%;padding:0.5rem;border-radius:8px;border:1px solid var(--border-color);">
+                            </div>
+                            <div class="form-group">
+                                <label for="newApptTime">Time</label>
+                                <select id="newApptTime" required style="width:100%;padding:0.5rem;border-radius:8px;border:1px solid var(--border-color);">
+                                    <option value="" disabled selected>Select time</option>
+                                    <option value="09:00">9:00 AM</option>
+                                    <option value="10:00">10:00 AM</option>
+                                    <option value="11:00">11:00 AM</option>
+                                    <option value="13:00">1:00 PM</option>
+                                    <option value="14:00">2:00 PM</option>
+                                    <option value="15:00">3:00 PM</option>
+                                    <option value="16:00">4:00 PM</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="newApptReason">Reason</label>
+                                <textarea id="newApptReason" rows="2" required style="width:100%;padding:0.5rem;border-radius:8px;border:1px solid var(--border-color);"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="newApptNotes">Notes (optional)</label>
+                                <textarea id="newApptNotes" rows="2" style="width:100%;padding:0.5rem;border-radius:8px;border:1px solid var(--border-color);"></textarea>
+                            </div>
+                            <div class="error-message" id="newApptError" style="margin-bottom:0.7rem;"></div>
+                            <button type="submit" class="primary-btn" style="width:100%;">Create Appointment</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+            <!-- Announcements Section -->
+            <section id="section-announcements" class="section">
+                <div class="section-header">
+                    <span class="section-icon" aria-hidden="true">
+                        <i class="fas fa-bullhorn" style="color:#f39c12;font-size:2rem;"></i>
+                    </span>
+                    <h2>Announcements</h2>
+                    <div class="section-illustration" aria-hidden="true">
+                        <!-- Megaphone SVG -->
+                        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <ellipse cx="28" cy="48" rx="22" ry="6" fill="#f4f6fb"/>
+                            <rect x="10" y="18" width="28" height="12" rx="6" fill="#f39c12"/>
+                            <rect x="36" y="20" width="10" height="8" rx="4" fill="#e6e9f8"/>
+                            <rect x="8" y="22" width="4" height="4" rx="2" fill="#e74c3c"/>
+                            <rect x="44" y="24" width="4" height="4" rx="2" fill="#5b7cfa"/>
+                        </svg>
+                    </div>
+                    <button id="create-announcement-btn" class="primary-btn" style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">
+                        <i class="fas fa-plus"></i> Create Announcement
+                    </button>
+                </div>
+                <div class="section-bg-shape announcements-bg"></div>
+                <div class="search-filter" style="margin-bottom:1.2rem;">
+                    <span class="search-input-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="announcement-search" placeholder="Search announcements...">
+                    </span>
+                    <select id="announcement-category-filter">
+                        <option value="">All Categories</option>
+                        <option value="general">General</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="event">Event</option>
+                        <option value="reminder">Reminder</option>
+                    </select>
+                </div>
+                <!-- Pinned Announcements -->
+                <div id="pinned-announcements" style="margin-bottom:1.5rem;"></div>
+                <!-- All Announcements -->
+                <div id="announcements-list" class="announcements-grid"></div>
+                <div class="no-data-message" id="no-announcements-message" style="display:none;">No announcements to display.</div>
+            </section>
+            <!-- Announcement Modal Placeholder -->
+            <div class="modal" id="announcement-modal" style="display:none;">
+                <div class="modal-content announcement-modal-content">
+                    <button class="close" id="close-announcement-modal" type="button" aria-label="Close">&times;</button>
+                    <div id="announcement-modal-body"></div>
+                </div>
+            </div>
+            <section id="section-resources" class="section"><h1>Resources</h1><div id="resourcesContainer"></div></section>
+            <section id="section-students" class="section"><h1>Students</h1><div id="studentsContainer"></div></section>
+            <section id="section-profile" class="section"><h1>Profile</h1><div id="profileContainer"></div></section>
+        </div>
+    </div>
+    <!-- Notifications Dropdown/Modal -->
+    <div id="notificationsDropdown" style="display:none;position:fixed;top:60px;right:40px;z-index:20000;background:var(--card-bg);color:var(--text-color);box-shadow:0 4px 24px rgba(44,62,80,0.18);border-radius:10px;min-width:320px;max-width:95vw;max-height:70vh;overflow-y:auto;padding:1.2rem 1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+        <h3 style="margin:0;font-size:1.15rem;">Notifications</h3>
+        <button id="closeNotificationsDropdown" style="background:none;border:none;font-size:1.5rem;color:#888;cursor:pointer;">&times;</button>
+      </div>
+      <div id="notificationsList">Loading...</div>
+    </div>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Config and AuthHelper -->
+    <script src="../../js/config.js"></script>
+    <script src="../../assets/js/auth-helper.js"></script>
+    <!-- Dashboard JS -->
+    <script src="js/counselor-dashboard.js"></script>
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+</body>
+</html> 

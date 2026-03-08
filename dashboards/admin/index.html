@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Guidance Management System</title>
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar modern-sidebar collapsible-sidebar expanded" id="adminSidebar" style="background:linear-gradient(135deg,#232946 0%,#283e6d 100%);box-shadow:2px 0 16px rgba(44,62,80,0.10);color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;width:230px;padding:0 0.5rem;position:relative;transition:width 0.22s cubic-bezier(.4,1.4,.6,1);">
+            <button id="sidebarCollapseBtn" aria-label="Toggle Sidebar" style="position:absolute;top:1.2rem;right:-18px;z-index:10;background:var(--primary-color);color:#fff;border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(44,62,80,0.10);cursor:pointer;transition:background 0.18s;">
+                <i class="fas fa-angle-left" id="sidebarCollapseIcon" style="font-size:1.2rem;"></i>
+            </button>
+            <div class="sidebar-header" style="padding:2.5rem 0 1.2rem 0;width:100%;text-align:center;display:flex;flex-direction:column;align-items:center;gap:1.1rem;">
+                <div class="sidebar-avatar" style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+                  <img src="https://ui-avatars.com/api/?name=Admin+User&background=5b7cfa&color=fff&size=128" alt="User Avatar" id="sidebarUserAvatar" style="width:64px;height:64px;border-radius:50%;border:2.5px solid var(--primary-color);background:#fff;">
+                  <span id="sidebarUserName" style="font-size:1.08rem;font-weight:600;color:#fff;">Admin User</span>
+                </div>
+                <div style="font-size:2.1rem;font-weight:800;letter-spacing:1px;color:#fff;margin-bottom:0.2rem;">GMS</div>
+                <div style="font-size:1.1rem;color:var(--muted-text);font-weight:500;">Admin Panel</div>
+            </div>
+            <ul class="sidebar-menu" style="list-style:none;padding:0;margin:0;flex:1;width:100%;display:flex;flex-direction:column;gap:0.5rem;">
+                <li><a href="#" id="nav-dashboard" class="active sidebar-link"><i class="fas fa-tachometer-alt"></i><span class="sidebar-label">Dashboard</span></a></li>
+                <li><a href="#" id="nav-appointments" class="sidebar-link"><i class="fas fa-calendar-alt"></i><span class="sidebar-label">Appointments</span></a></li>
+                <li><a href="#" id="nav-announcements" class="sidebar-link"><i class="fas fa-bullhorn"></i><span class="sidebar-label">Announcements</span></a></li>
+                <li><a href="#" id="nav-resources" class="sidebar-link"><i class="fas fa-book"></i><span class="sidebar-label">Resources</span></a></li>
+                <li><a href="#" id="nav-users" class="sidebar-link"><i class="fas fa-users"></i><span class="sidebar-label">Users</span></a></li>
+                <li><a href="#" id="nav-profile" class="sidebar-link"><i class="fas fa-user"></i><span class="sidebar-label">Profile</span></a></li>
+            </ul>
+            <div class="sidebar-logout" style="width:100%;padding:1.5rem 0 2rem 0;display:flex;flex-direction:column;align-items:center;">
+                <a href="#" id="logout" class="sidebar-link logout-link" style="color:#e74c3c;font-weight:600;font-size:1.1rem;display:flex;align-items:center;gap:0.9rem;padding:0.9rem 2rem;border-radius:10px;transition:background 0.18s;">
+                    <i class="fas fa-sign-out-alt"></i> <span class="sidebar-label">Logout</span>
+                </a>
+            </div>
+            <style>
+                .collapsible-sidebar {
+                    transition:width 0.22s cubic-bezier(.4,1.4,.6,1);
+                }
+                .collapsible-sidebar.collapsed {
+                    width:68px !important;
+                }
+                .collapsible-sidebar .sidebar-header {
+                    transition:padding 0.18s;
+                }
+                .collapsible-sidebar.collapsed .sidebar-header {
+                    padding:1.2rem 0 0.7rem 0 !important;
+                }
+                .collapsible-sidebar .sidebar-avatar img {
+                    transition:width 0.18s, height 0.18s;
+                }
+                .collapsible-sidebar.collapsed .sidebar-avatar img {
+                    width:38px !important; height:38px !important;
+                }
+                .collapsible-sidebar.collapsed .sidebar-avatar span,
+                .collapsible-sidebar.collapsed .sidebar-header > div:not(.sidebar-avatar) {
+                    display:none !important;
+                }
+                .collapsible-sidebar .sidebar-label {
+                    display:inline-block;
+                    transition:opacity 0.18s, width 0.18s;
+                    margin-left:0.5rem;
+                }
+                .collapsible-sidebar.collapsed .sidebar-label {
+                    opacity:0; width:0; overflow:hidden; margin:0;
+                }
+                .collapsible-sidebar .sidebar-link {
+                    justify-content:flex-start;
+                }
+                .collapsible-sidebar.collapsed .sidebar-link {
+                    justify-content:center;
+                    padding-left:0.7rem !important; padding-right:0.7rem !important;
+                }
+                .collapsible-sidebar.collapsed .sidebar-link i {
+                    margin-right:0 !important;
+                }
+                .collapsible-sidebar .sidebar-link span {
+                    white-space:nowrap;
+                }
+                .collapsible-sidebar .sidebar-logout {
+                    border-top:1.5px solid var(--border-color);
+                }
+                .collapsible-sidebar.collapsed .sidebar-logout {
+                    padding:0.7rem 0 1rem 0 !important;
+                }
+                #sidebarCollapseBtn {
+                    background:var(--primary-color);
+                }
+                #sidebarCollapseBtn:hover {
+                    background:#3a56c9;
+                }
+                .collapsible-sidebar.collapsed #sidebarCollapseIcon {
+                    transform:rotate(180deg);
+                }
+                @media (max-width: 900px) {
+                    .collapsible-sidebar { width:100vw !important; min-height:auto; flex-direction:row; border-radius:0; }
+                    .sidebar-header { display:none; }
+                    .sidebar-menu { flex-direction:row; gap:0.2rem; }
+                    .sidebar-menu li { width:auto; }
+                    .sidebar-link { padding:0.8rem 1.1rem; font-size:1rem; border-radius:8px; }
+                    .sidebar-logout { padding:0.5rem 0 1rem 0; border-top:none; }
+                    #sidebarCollapseBtn { display:none !important; }
+                }
+            </style>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar" style="display:flex;align-items:center;justify-content:space-between;gap:2rem;">
+                <div class="dashboard-title" style="display:flex;align-items:center;gap:1rem;">
+                    <i class="fas fa-chart-line" style="font-size:1.7rem;color:var(--primary-color);"></i>
+                    <span style="font-size:1.35rem;font-weight:700;letter-spacing:0.5px;">Admin Dashboard</span>
+                </div>
+                <div class="topbar-accent" style="height:4px;width:120px;background:linear-gradient(90deg,#5b7cfa 0%,#4a6ae9 100%);border-radius:2px;"></div>
+            </div>
+            
+            <!-- Dashboard Section -->
+            <div id="dashboardSection" class="section active">
+                <h1>Admin Dashboard</h1>
+                
+                <div id="dashboardError" class="error-message"></div>
+                
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <div class="stat-info">
+                            <h3>Total Students</h3>
+                            <p id="studentCount">0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <i class="fas fa-user-tie"></i>
+                        <div class="stat-info">
+                            <h3>Counselors</h3>
+                            <p id="counselorCount">0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <i class="fas fa-calendar-day"></i>
+                        <div class="stat-info">
+                            <h3>Today's Appointments</h3>
+                            <p id="todayAppointmentCount">0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <i class="fas fa-hourglass-half"></i>
+                        <div class="stat-info">
+                            <h3>Pending Appointments</h3>
+                            <p id="pendingAppointmentCount">0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <i class="fas fa-file-alt"></i>
+                        <div class="stat-info">
+                            <h3>Total Resources</h3>
+                            <p id="resourceCount">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-sections">
+                    <div class="dashboard-section">
+                        <h2>Recent Activity</h2>
+                        <div id="recentActivityContainer" class="activity-container">
+                            <p class="no-data-message">Loading recent activity...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-section">
+                        <h2>Upcoming Appointments</h2>
+                        <div id="upcomingAppointmentsContainer">
+                            <p class="no-data-message">Loading upcoming appointments...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Users Section -->
+            <div class="section" id="usersSection">
+                <h1>User Management</h1>
+                <div id="userError" class="error-message"></div>
+                
+                <div class="section-controls">
+                    <div class="filter-group">
+                        <label for="roleFilter">Filter by Role:</label>
+                        <select id="roleFilter">
+                            <option value="">All Roles</option>
+                            <option value="student">Students</option>
+                            <option value="counselor">Counselors</option>
+                            <option value="admin">Administrators</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="usersContainer">
+                    <p class="no-data-message">Loading users...</p>
+                </div>
+            </div>
+            
+            <!-- Appointments Section -->
+            <div class="section" id="appointmentsSection">
+                <h1>Appointments</h1>
+                <div id="appointmentError" class="error-message"></div>
+                
+                <div class="section-controls">
+                    <div class="filter-group">
+                        <label for="statusFilter">Filter by Status:</label>
+                        <select id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="dateFilter">Filter by Date:</label>
+                        <input type="date" id="dateFilter">
+                    </div>
+                </div>
+                
+                <div id="appointmentsContainer">
+                    <p class="no-data-message">Loading appointments...</p>
+                </div>
+            </div>
+            
+            <!-- Resources Section -->
+            <div class="section" id="resourcesSection">
+                <h1>Resources</h1>
+                <div id="resourceError" class="error-message"></div>
+                
+                <div class="section-controls">
+                    <div class="filter-group">
+                        <label for="categoryFilter">Filter by Category:</label>
+                        <select id="categoryFilter">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="counselorFilter">Filter by Uploader:</label>
+                        <select id="counselorFilter">
+                            <option value="">All Counselors</option>
+                        </select>
+                    </div>
+                    
+                    <button id="uploadResourceBtn" class="btn primary-btn">
+                        <i class="fas fa-upload"></i> Upload Resource
+                    </button>
+                </div>
+                
+                <div id="resourcesContainer">
+                    <p class="no-data-message">Loading resources...</p>
+                </div>
+            </div>
+            
+            <!-- Announcements Section -->
+            <section id="section-announcements" class="section">
+                <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;">
+                    <h1>Announcements</h1>
+                    <button class="primary-btn" id="addAnnouncementBtn"><i class="fas fa-plus"></i> Add Announcement</button>
+                </div>
+                <div id="announcementsListContainer" style="margin-top:2rem;"></div>
+                <!-- Announcement Modal (hidden by default) -->
+                <div id="announcementModal" class="modal" style="display:none;">
+                    <div class="modal-content" style="max-width:480px;">
+                        <span class="close" id="closeAnnouncementModal">&times;</span>
+                        <h2 id="announcementModalTitle">Add Announcement</h2>
+                        <form id="announcementForm">
+                            <div class="form-group">
+                                <label for="announcementTitle">Title</label>
+                                <input type="text" id="announcementTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="announcementMessage">Message</label>
+                                <textarea id="announcementMessage" rows="4" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="announcementAudience">Audience</label>
+                                <select id="announcementAudience" required>
+                                    <option value="all">All</option>
+                                    <option value="student">Students</option>
+                                    <option value="counselor">Counselors</option>
+                                    <option value="admin">Admins</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="primary-btn" id="saveAnnouncementBtn">Save</button>
+                            </div>
+                            <div class="error-message" id="announcementError" style="display:none;"></div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Settings Section -->
+            <div class="section" id="settingsSection">
+                <h1>Settings</h1>
+                <div id="settingsError" class="error-message"></div>
+                
+                <div class="settings-tabs">
+                    <div class="settings-tab-item active" data-tab="general">General</div>
+                    <div class="settings-tab-item" data-tab="appointment">Appointments</div>
+                    <div class="settings-tab-item" data-tab="categories">Resource Categories</div>
+                </div>
+                
+                <div class="settings-tab-content active" id="generalSettings">
+                    <h2>General Settings</h2>
+                    <div id="generalSettingsError" class="error-message"></div>
+                    
+                    <form id="generalSettingsForm" class="form">
+                        <div class="form-group">
+                            <label for="schoolName">School Name:</label>
+                            <input type="text" id="schoolName" placeholder="School Name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="systemName">System Name:</label>
+                            <input type="text" id="systemName" placeholder="Guidance Management System" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="contactEmail">Contact Email:</label>
+                            <input type="email" id="contactEmail" placeholder="contact@example.com" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="themeColor">Theme Color:</label>
+                            <input type="color" id="themeColor" value="#4a6baf">
+                        </div>
+                        
+                        <button type="submit" class="btn primary-btn">Save General Settings</button>
+                    </form>
+                </div>
+                
+                <div class="settings-tab-content" id="appointmentSettings">
+                    <h2>Appointment Settings</h2>
+                    <div id="appointmentSettingsError" class="error-message"></div>
+                    
+                    <form id="appointmentSettingsForm" class="form">
+                        <div class="form-group">
+                            <label for="minNoticeHours">Minimum Notice (hours):</label>
+                            <input type="number" id="minNoticeHours" min="0" placeholder="24" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="maxAppointmentDuration">Maximum Duration (minutes):</label>
+                            <input type="number" id="maxAppointmentDuration" min="15" step="15" placeholder="60" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="workingHoursStart">Working Hours Start:</label>
+                            <input type="time" id="workingHoursStart" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="workingHoursEnd">Working Hours End:</label>
+                            <input type="time" id="workingHoursEnd" required>
+                        </div>
+                        
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="allowWeekends">
+                            <label for="allowWeekends">Allow Weekend Appointments</label>
+                        </div>
+                        
+                        <button type="submit" class="btn primary-btn">Save Appointment Settings</button>
+                    </form>
+                </div>
+                
+                <div class="settings-tab-content" id="categoriesSettings">
+                    <h2>Resource Categories</h2>
+                    <div id="categoryError" class="error-message"></div>
+                    
+                    <button id="addCategoryBtn" class="btn primary-btn">
+                        <i class="fas fa-plus"></i> Add Category
+                    </button>
+                    
+                    <div id="addCategorySection" style="display: none;">
+                        <h3>Add New Category</h3>
+                        <form id="categorySettingsForm" class="form">
+                            <div class="form-group">
+                                <label for="newCategoryName">Category Name:</label>
+                                <input type="text" id="newCategoryName" placeholder="Category Name" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="newCategoryDescription">Description:</label>
+                                <textarea id="newCategoryDescription" placeholder="Category Description"></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn primary-btn">Add Category</button>
+                            <button type="button" class="btn secondary-btn" onclick="document.getElementById('addCategorySection').style.display = 'none';">Cancel</button>
+                        </form>
+                    </div>
+                    
+                    <div id="categoriesContainer" class="categories-container">
+                        <p class="no-data-message">Loading categories...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Section -->
+            <div class="section" id="profileSection">
+                <h1>Your Profile</h1>
+                <div id="profileError" class="error-message"></div>
+                <div class="profile-modern-wrapper" style="display:flex;flex-wrap:wrap;gap:2.5rem;align-items:flex-start;justify-content:center;">
+                  <!-- Profile Info Card -->
+                  <div class="profile-card" style="background:var(--card-bg);box-shadow:var(--box-shadow);border-radius:var(--border-radius);padding:2.5rem 2.5rem 2rem 2.5rem;min-width:320px;max-width:400px;width:100%;display:flex;flex-direction:column;align-items:center;">
+                    <div class="profile-avatar" style="margin-bottom:1.5rem;">
+                      <img src="https://ui-avatars.com/api/?name=Admin+User&background=5b7cfa&color=fff&size=128" alt="Profile Avatar" id="userAvatar" style="width:110px;height:110px;border-radius:50%;border:3px solid var(--primary-color);background:#fff;">
+                    </div>
+                    <form style="width:100%;">
+                      <div class="form-group" style="margin-bottom:1.5rem;">
+                        <label for="profileName">Name</label>
+                        <input type="text" id="profileName" placeholder="Your Name" style="font-size:1.1rem;">
+                      </div>
+                      <div class="form-group" style="margin-bottom:1.5rem;">
+                        <label for="profileEmail">Email</label>
+                        <input type="email" id="profileEmail" placeholder="Your Email" disabled style="background:rgba(255,255,255,0.08);color:#aaa;">
+                      </div>
+                      <div class="form-group" style="margin-bottom:2rem;">
+                        <label for="profileRole">Role</label>
+                        <input type="text" id="profileRole" value="Administrator" disabled style="background:rgba(255,255,255,0.08);color:#aaa;">
+                      </div>
+                      <button id="updateProfileBtn" class="btn primary-btn" type="button" style="width:100%;font-size:1.1rem;padding:0.75rem 0;margin-top:0.5rem;">
+                        <i class="fas fa-save"></i> Update Profile
+                      </button>
+                    </form>
+                  </div>
+                  <!-- Divider for desktop -->
+                  <div class="profile-divider" style="width:2px;min-height:320px;background:var(--border-color);align-self:stretch;display:none;"></div>
+                  <!-- Password Change Card -->
+                  <div class="profile-card" style="background:var(--card-bg);box-shadow:var(--box-shadow);border-radius:var(--border-radius);padding:2.5rem 2.5rem 2rem 2.5rem;min-width:320px;max-width:400px;width:100%;display:flex;flex-direction:column;align-items:center;">
+                    <h2 style="margin-bottom:1.5rem;font-size:1.3rem;">Change Password</h2>
+                    <div id="passwordError" class="error-message" style="margin-bottom:1rem;"></div>
+                    <form id="changePasswordForm" style="width:100%;">
+                      <div class="form-group" style="margin-bottom:1.5rem;">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" required autocomplete="current-password">
+                      </div>
+                      <div class="form-group" style="margin-bottom:1.5rem;">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" required autocomplete="new-password">
+                      </div>
+                      <div class="form-group" style="margin-bottom:2rem;">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" required autocomplete="new-password">
+                      </div>
+                      <button type="submit" class="btn primary-btn" style="width:100%;font-size:1.1rem;padding:0.75rem 0;">
+                        Change Password
+                      </button>
+                    </form>
+                  </div>
+                </div>
+                <style>
+                  @media (max-width: 900px) {
+                    .profile-modern-wrapper { flex-direction: column; gap:2rem; }
+                    .profile-divider { display:none !important; }
+                  }
+                  @media (min-width: 901px) {
+                    .profile-divider { display:block !important; }
+                  }
+                  .profile-card input[type="text"], .profile-card input[type="email"], .profile-card input[type="password"] {
+                    background:rgba(255,255,255,0.04);
+                    border:1.5px solid var(--border-color);
+                    color:var(--text-color);
+                    font-size:1.08rem;
+                    padding:0.7rem 1rem;
+                    border-radius:8px;
+                    transition:border 0.2s;
+                  }
+                  .profile-card input[type="text"]:focus, .profile-card input[type="email"]:focus, .profile-card input[type="password"]:focus {
+                    border:1.5px solid var(--primary-color);
+                    outline:none;
+                  }
+                  .profile-card label {
+                    color:var(--muted-text);
+                    font-weight:500;
+                    margin-bottom:0.4rem;
+                  }
+                  .profile-card button.btn.primary-btn {
+                    background:var(--primary-color);
+                    color:#fff;
+                    border-radius:8px;
+                    font-weight:600;
+                    box-shadow:0 2px 8px rgba(44,62,80,0.10);
+                  }
+                  .profile-card button.btn.primary-btn:hover {
+                    background:#3a56c9;
+                  }
+                </style>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Resource Upload Modal -->
+    <div id="resourceModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add Resource Link</h2>
+            <div id="resourceFormError" class="error-message"></div>
+            
+            <form id="resourceForm" class="form">
+                <div class="form-group">
+                    <label for="resourceTitle">Title:</label>
+                    <input type="text" id="resourceTitle" placeholder="Resource Title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resourceDescription">Description:</label>
+                    <textarea id="resourceDescription" placeholder="Resource Description"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resourceCategory">Category:</label>
+                    <select id="resourceCategory" required>
+                        <option value="">Select Category</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resourceUrl">External URL:</label>
+                    <input type="url" id="resourceUrl" placeholder="https://" required>
+                    <small>Provide a link to an external resource.</small>
+                </div>
+                
+                <button type="submit" class="btn primary-btn">Add Resource</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Application Scripts -->
+    <script src="../../assets/js/firebase-config.js"></script>
+    <script src="../../assets/js/auth-helper.js"></script>
+    <script src="js/admin-modules.js"></script>
+    <script src="js/modules/users.js"></script>
+    <script src="../../js/modules/resources.js"></script>
+    <script src="js/activity-tracker.js"></script>
+    <script src="js/appointment-loader.js"></script>
+    <script src="js/admin-dashboard.js"></script>
+    <script src="js/module-test.js"></script>
+    <script>
+    // Collapsible sidebar JS
+    document.addEventListener('DOMContentLoaded', function() {
+      const sidebar = document.getElementById('adminSidebar');
+      const collapseBtn = document.getElementById('sidebarCollapseBtn');
+      const collapseIcon = document.getElementById('sidebarCollapseIcon');
+      collapseBtn.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+        sidebar.classList.toggle('expanded');
+        // Optionally, persist state in localStorage
+        if (sidebar.classList.contains('collapsed')) {
+          collapseIcon.classList.remove('fa-angle-left');
+          collapseIcon.classList.add('fa-angle-right');
+          localStorage.setItem('adminSidebarCollapsed', '1');
+        } else {
+          collapseIcon.classList.remove('fa-angle-right');
+          collapseIcon.classList.add('fa-angle-left');
+          localStorage.setItem('adminSidebarCollapsed', '0');
+        }
+      });
+      // Restore state
+      if (localStorage.getItem('adminSidebarCollapsed') === '1') {
+        sidebar.classList.add('collapsed');
+        sidebar.classList.remove('expanded');
+        collapseIcon.classList.remove('fa-angle-left');
+        collapseIcon.classList.add('fa-angle-right');
+      }
+    });
+    </script>
+</body>
+</html> 

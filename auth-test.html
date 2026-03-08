@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Auth Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        pre {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .tab {
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 0 5px 5px 5px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Firebase Authentication Test Page</h1>
+    
+    <div class="container">
+        <h2>Current Authentication State</h2>
+        <div id="auth-status">Checking authentication...</div>
+        <div id="user-details"></div>
+    </div>
+    
+    <div class="tabs">
+        <div class="tab active" data-tab="auth-actions">Auth Actions</div>
+        <div class="tab" data-tab="database-test">Database Test</div>
+        <div class="tab" data-tab="path-test">Path Test</div>
+    </div>
+    
+    <div class="tab-content active" id="auth-actions-tab">
+        <div class="container">
+            <h2>Authentication Actions</h2>
+            <div>
+                <button id="logout-btn">Log Out</button>
+                <button id="check-btn">Check Auth State</button>
+                <button id="goto-admin-btn">Go To Admin Dashboard</button>
+                <button id="goto-student-btn">Go To Student Dashboard</button>
+            </div>
+            
+            <div class="login-form">
+                <h3>Login Form</h3>
+                <form id="login-form">
+                    <div>
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div>
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <button type="submit">Login</button>
+                </form>
+                <div id="login-error" class="error"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="database-test-tab">
+        <div class="container">
+            <h2>Firestore Database Test</h2>
+            <button id="test-db-btn">Test Database Access</button>
+            <div id="db-result"></div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="path-test-tab">
+        <div class="container">
+            <h2>Path Information</h2>
+            <div id="path-info"></div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>Debug Information</h2>
+        <div id="debug-info"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <!-- Load Firebase config -->
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/auth-helper.js"></script>
+    
+    <script>
+        // DOM Elements
+        const authStatusEl = document.getElementById('auth-status');
+        const userDetailsEl = document.getElementById('user-details');
+        const logoutBtn = document.getElementById('logout-btn');
+        const checkBtn = document.getElementById('check-btn');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const debugInfoEl = document.getElementById('debug-info');
+        const dbTestBtn = document.getElementById('test-db-btn');
+        const dbResultEl = document.getElementById('db-result');
+        const pathInfoEl = document.getElementById('path-info');
+        const gotoAdminBtn = document.getElementById('goto-admin-btn');
+        const gotoStudentBtn = document.getElementById('goto-student-btn');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // Add debugging info
+        function addDebugInfo(message) {
+            const now = new Date();
+            const timestamp = now.toLocaleTimeString();
+            debugInfoEl.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+        }
+        
+        // Update UI with auth state
+        function updateAuthUI(user) {
+            if (user) {
+                authStatusEl.innerHTML = '<span class="success">✓ User is logged in</span>';
+                
+                // Get user data from Firestore
+                db.collection('users').doc(user.uid).get()
+                    .then(doc => {
+                        if (doc.exists) {
+                            const userData = doc.data();
+                            userDetailsEl.innerHTML = `
+                                <pre>
+Email: ${user.email}
+UID: ${user.uid}
+Display Name: ${user.displayName || 'Not set'}
+Role: ${userData.role || 'Not set'}
+                                </pre>
+                            `;
+                            addDebugInfo(`User document found in Firestore. Role: ${userData.role}`);
+                        } else {
+                            userDetailsEl.innerHTML = `
+                                <pre>
+Email: ${user.email}
+UID: ${user.uid}
+Display Name: ${user.displayName || 'Not set'}
+Role: Not found in Firestore
+                                </pre>
+                            `;
+                            addDebugInfo('User is authenticated but no document found in Firestore');
+                        }
+                    })
+                    .catch(error => {
+                        userDetailsEl.innerHTML = `<p class="error">Error getting user data: ${error.message}</p>`;
+                        addDebugInfo(`Error getting user data: ${error.message}`);
+                    });
+            } else {
+                authStatusEl.innerHTML = '<span class="error">✗ No user logged in</span>';
+                userDetailsEl.innerHTML = '';
+                addDebugInfo('No user is currently logged in');
+            }
+        }
+        
+        // Display path information
+        function displayPathInfo() {
+            const currentPath = window.location.pathname;
+            const currentUrl = window.location.href;
+            const basePath = currentPath.includes('/dashboards/') ? '../../' : './';
+            
+            let dashboardPaths = {
+                admin: basePath + 'dashboards/admin/index.html',
+                student: basePath + 'dashboards/student/index.html',
+                counselor: basePath + 'dashboards/counselor/index.html'
+            };
+            
+            pathInfoEl.innerHTML = `
+                <pre>
+Current Path: ${currentPath}
+Current URL: ${currentUrl}
+Base Path: ${basePath}
+
+Admin Dashboard Path: ${dashboardPaths.admin}
+Student Dashboard Path: ${dashboardPaths.student}
+Counselor Dashboard Path: ${dashboardPaths.counselor}
+                </pre>
+            `;
+        }
+        
+        // Check if user is already logged in when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            addDebugInfo('Page loaded - checking auth state');
+            displayPathInfo();
+            
+            // Check authentication
+            const user = auth.currentUser;
+            if (user) {
+                addDebugInfo(`Direct auth check: user found - ${user.email}`);
+                updateAuthUI(user);
+            } else {
+                addDebugInfo('Direct auth check: no user found, waiting for auth state change');
+            }
+        });
+        
+        // Auth state change listener
+        auth.onAuthStateChanged(user => {
+            addDebugInfo(`Auth state changed: user ${user ? 'logged in' : 'logged out'}`);
+            updateAuthUI(user);
+        });
+        
+        // Logout button
+        logoutBtn.addEventListener('click', () => {
+            addDebugInfo('Logout button clicked');
+            AuthHelper.signOut()
+                .then(() => {
+                    addDebugInfo('Logged out successfully');
+                })
+                .catch(error => {
+                    addDebugInfo(`Error signing out: ${error.message}`);
+                });
+        });
+        
+        // Check auth state button
+        checkBtn.addEventListener('click', () => {
+            addDebugInfo('Check auth state button clicked');
+            const user = auth.currentUser;
+            addDebugInfo(`Current user: ${user ? user.email : 'None'}`);
+            updateAuthUI(user);
+        });
+        
+        // Test database button
+        dbTestBtn.addEventListener('click', () => {
+            addDebugInfo('Testing database access');
+            dbResultEl.innerHTML = 'Testing database connection...';
+            
+            db.collection('users').limit(1).get()
+                .then(snapshot => {
+                    if (snapshot.empty) {
+                        dbResultEl.innerHTML = '<span class="success">Database connection successful, but no users found.</span>';
+                        addDebugInfo('Database connection successful, but no users found');
+                    } else {
+                        dbResultEl.innerHTML = '<span class="success">Database connection successful! Found users.</span>';
+                        addDebugInfo('Database connection successful, users found');
+                    }
+                })
+                .catch(error => {
+                    dbResultEl.innerHTML = `<span class="error">Database error: ${error.message}</span>`;
+                    addDebugInfo(`Database error: ${error.message}`);
+                });
+        });
+        
+        // Go to dashboard buttons
+        gotoAdminBtn.addEventListener('click', () => {
+            addDebugInfo('Redirecting to admin dashboard');
+            AuthHelper.redirectToDashboard('admin');
+        });
+        
+        gotoStudentBtn.addEventListener('click', () => {
+            addDebugInfo('Redirecting to student dashboard');
+            AuthHelper.redirectToDashboard('student');
+        });
+        
+        // Login form
+        loginForm.addEventListener('submit', e => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            addDebugInfo(`Attempting to login with email: ${email}`);
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then(userCredential => {
+                    addDebugInfo('Login successful');
+                    loginError.textContent = '';
+                    loginForm.reset();
+                })
+                .catch(error => {
+                    addDebugInfo(`Login error: ${error.message}`);
+                    loginError.textContent = error.message;
+                });
+        });
+        
+        // Tab switching
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                // Remove active class from all tabs and contents
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html> 

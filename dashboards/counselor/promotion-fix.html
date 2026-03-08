@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Promoted Account</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #5b7cfa;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #4a6ae9;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        pre {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fix Promoted Account</h1>
+    <p>This tool helps fix issues that may occur when a user is promoted from student to counselor.</p>
+    
+    <div class="container">
+        <h2>Current User Information</h2>
+        <div id="userInfo">Loading user information...</div>
+    </div>
+    
+    <div class="container">
+        <h2>1. Check Counselor Collection</h2>
+        <p>First, check if your account exists in the counselors collection:</p>
+        <button id="checkBtn">Check Counselor Record</button>
+        <div id="checkStatus"></div>
+    </div>
+    
+    <div class="container hidden" id="fixContainer">
+        <h2>2. Fix Counselor Record</h2>
+        <p>If you don't have a counselor record, click below to create one:</p>
+        <button id="fixBtn">Create Counselor Record</button>
+        <div id="fixStatus"></div>
+    </div>
+    
+    <div class="container hidden" id="redirectContainer">
+        <h2>3. Return to Dashboard</h2>
+        <p>Return to the counselor dashboard:</p>
+        <button id="redirectBtn">Go to Counselor Dashboard</button>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    
+    <!-- Application Scripts -->
+    <script src="../../js/config.js"></script>
+    
+    <script>
+        // Store current user
+        let currentUser = null;
+        let hasRecord = false;
+        
+        // Wait for auth to be ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is authenticated
+            auth.onAuthStateChanged(async (user) => {
+                if (!user) {
+                    // Redirect to login if not logged in
+                    window.location.href = '../../index.html';
+                    return;
+                }
+                
+                currentUser = user;
+                
+                // Display user info
+                showUserInfo(user);
+                
+                // Setup buttons
+                setupButtons();
+            });
+        });
+        
+        async function showUserInfo(user) {
+            try {
+                // Get user doc
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                const userData = userDoc.exists ? userDoc.data() : {};
+                
+                // Display user info
+                const userInfoEl = document.getElementById('userInfo');
+                userInfoEl.innerHTML = `
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Display Name:</strong> ${user.displayName || 'Not set'}</p>
+                    <p><strong>User ID:</strong> ${user.uid}</p>
+                    <p><strong>Role (in users collection):</strong> ${userData.role || 'Not set'}</p>
+                `;
+                
+                // If user role is not counselor, show warning
+                if (userData.role !== 'counselor') {
+                    userInfoEl.innerHTML += `
+                        <div class="error">
+                            <p><strong>Warning:</strong> Your user role is not set to 'counselor'. This tool is meant for users who have been promoted to counselor.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+                document.getElementById('userInfo').innerHTML = `
+                    <div class="error">
+                        <p>Error loading user information: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function setupButtons() {
+            // Check counselor record button
+            document.getElementById('checkBtn').addEventListener('click', async () => {
+                const checkStatusEl = document.getElementById('checkStatus');
+                checkStatusEl.innerHTML = 'Checking...';
+                
+                try {
+                    const counselorDoc = await db.collection('counselors').doc(currentUser.uid).get();
+                    
+                    if (counselorDoc.exists) {
+                        checkStatusEl.innerHTML = `
+                            <div class="success">
+                                <p>✅ Record found in counselors collection!</p>
+                                <p>Your account appears to be properly set up as a counselor.</p>
+                                <pre>${JSON.stringify(counselorDoc.data(), null, 2)}</pre>
+                            </div>
+                        `;
+                        
+                        hasRecord = true;
+                        document.getElementById('redirectContainer').classList.remove('hidden');
+                    } else {
+                        checkStatusEl.innerHTML = `
+                            <div class="error">
+                                <p>❌ No record found in counselors collection</p>
+                                <p>This could be causing issues when accessing the counselor dashboard.</p>
+                            </div>
+                        `;
+                        
+                        // Show fix container
+                        document.getElementById('fixContainer').classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error checking counselor record:', error);
+                    checkStatusEl.innerHTML = `
+                        <div class="error">
+                            <p>Error checking counselor record: ${error.message}</p>
+                        </div>
+                    `;
+                }
+            });
+            
+            // Fix counselor record button
+            document.getElementById('fixBtn').addEventListener('click', async () => {
+                const fixStatusEl = document.getElementById('fixStatus');
+                fixStatusEl.innerHTML = 'Creating counselor record...';
+                
+                try {
+                    // Get user doc to get additional information
+                    const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                    const userData = userDoc.exists ? userDoc.data() : {};
+                    
+                    // Create counselor record
+                    await db.collection('counselors').doc(currentUser.uid).set({
+                        name: currentUser.displayName || userData.name || 'Counselor',
+                        email: currentUser.email,
+                        role: 'counselor',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        promotedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        promotedFrom: 'student'
+                    });
+                    
+                    fixStatusEl.innerHTML = `
+                        <div class="success">
+                            <p>✅ Counselor record created successfully!</p>
+                            <p>Your account should now work properly with the counselor dashboard.</p>
+                        </div>
+                    `;
+                    
+                    // Show redirect button
+                    document.getElementById('redirectContainer').classList.remove('hidden');
+                } catch (error) {
+                    console.error('Error creating counselor record:', error);
+                    fixStatusEl.innerHTML = `
+                        <div class="error">
+                            <p>Error creating counselor record: ${error.message}</p>
+                        </div>
+                    `;
+                }
+            });
+            
+            // Redirect button
+            document.getElementById('redirectBtn').addEventListener('click', () => {
+                // Clear any session storage flags
+                sessionStorage.removeItem('onCounselorDashboard');
+                // Redirect to counselor dashboard
+                window.location.href = './index.html';
+            });
+        }
+    </script>
+</body>
+</html> 

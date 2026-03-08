@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Guidance Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div style="display:flex;align-items:center;justify-content:center;gap:0.7rem;margin-bottom:0.5rem;">
+                <i class="fas fa-chart-line" style="font-size:2rem;color:var(--primary-color);"></i>
+                <h1 style="margin:0;font-size:1.5rem;letter-spacing:0.5px;">Guidance Management System</h1>
+            </div>
+            <p>Sign in to access your account</p>
+        </div>
+        
+        <div class="login-tabs">
+            <div class="login-tab active" id="login-tab">Login</div>
+            <div class="login-tab" id="register-tab">Register</div>
+        </div>
+        
+        <div class="login-form-container" id="login-form">
+            <div class="form-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="login-email" placeholder="Email Address" required>
+            </div>
+            <div class="form-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="login-password" placeholder="Password" required>
+            </div>
+            <div class="forgot-password" style="text-align:right;margin-bottom:1.5rem;">
+                <a href="#" id="forgot-password-link">Forgot Password?</a>
+            </div>
+            <button class="login-button" id="login-button">Login</button>
+            <div class="error-message" id="login-error"></div>
+        </div>
+        
+        <div class="login-form-container register-container" id="register-form">
+            <div class="form-group">
+                <i class="fas fa-user"></i>
+                <input type="text" id="register-name" placeholder="Full Name" required>
+            </div>
+            <div class="form-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="register-email" placeholder="Email Address" required>
+            </div>
+            <div class="form-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="register-password" placeholder="Password" required>
+            </div>
+            <div class="form-group">
+                <i class="fas fa-user-tag"></i>
+                <select id="register-role" required>
+                    <option value="student" selected>Student</option>
+                </select>
+                <small style="color:var(--muted-text);">Only students can self-register. Counselors and admins must be created by an administrator.</small>
+            </div>
+            <button class="login-button" id="register-button">Register</button>
+            <div class="error-message" id="register-error"></div>
+        </div>
+        
+        <div class="login-footer">
+            <p>&copy; 2023 Guidance Management System - All Rights Reserved</p>
+        </div>
+    </div>
+    
+    <div class="modal" id="forgot-password-modal">
+        <div class="modal-content">
+            <span class="close" id="close-forgot-modal">&times;</span>
+            <h2>Reset Password</h2>
+            <p>Enter your email address below to receive a password reset link.</p>
+            <div class="form-group">
+                <input type="email" id="reset-email" placeholder="Email Address" required>
+            </div>
+            <button class="login-button" id="reset-button">Send Reset Link</button>
+            <div class="error-message" id="reset-error"></div>
+            <div id="reset-success" style="color: green; margin-top: 1rem; text-align: center; display: none;">
+                Password reset email sent. Please check your inbox.
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <!-- Config and AuthHelper -->
+    <script src="js/config.js"></script>
+    <script src="assets/js/auth-helper.js"></script>
+    <script src="assets/js/auth.js"></script>
+</body>
+</html> 
